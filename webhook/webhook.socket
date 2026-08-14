@@ -1,0 +1,15 @@
+[Install]
+WantedBy=multi-user.target
+
+[Unit]
+Description=Webhook server socket
+StartLimitBurst=10
+StartLimitIntervalSec=30
+
+[Socket]
+ListenStream=4665
+#FreeBind=true
+#Accept=true
+TimeoutSec=3600
+TriggerLimitBurst=10
+PassFileDescriptorsToExec=true

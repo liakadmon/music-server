@@ -1,0 +1,12 @@
+[Unit]
+Description=Webhook server
+Requires=webhook.socket
+JobTimeoutSec=900
+JobRunningTimeoutSec=900
+
+[Service]
+Type=exec
+ExecStart=webhook -verbose -hotreload -nopanic -hooks /etc/webhook/hooks.yaml
+# Which user should the webhooks run as?
+User=
+Group=

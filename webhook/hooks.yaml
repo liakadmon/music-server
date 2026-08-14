@@ -1,0 +1,7 @@
+- id: directory-finished
+  execute-command: # absolute path to directory-finished.sh
+  command-working-directory: #downloads folder
+  pass-arguments-to-command:
+  - source: "payload"
+    name: "localDirectoryName"
+    envname: "payload"

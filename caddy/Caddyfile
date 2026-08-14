@@ -1,0 +1,33 @@
+# To use your own domain name (with automatic HTTPS), first make
+# sure your domain's A/AAAA DNS records are properly pointed to
+# this machine's public IP, then replace "example.com" below with your
+# domain name.
+{
+	# Set the ACME DNS challenge provider to use Cloudflare for all sites
+	acme_dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+
+	##	servers {
+	##		trusted_proxies cloudflare
+	##		client_ip_headers Cf-Connecting-Ip
+	##	}
+}
+
+subdomain.example.org {
+	reverse_proxy container_name:80
+	encode gzip
+	#"encode gzip" can help compress traffic and increase speed, but try disabling it and refreshing your Caddyfile if you encounter issues
+}
+
+localservice.example.org
+	reverse_proxy host.docker.internal:3939
+}
+
+navidrome.example.org {
+	reverse_proxy host.docker.internal:4533
+	encode gzip
+}
+
+slskd.example.org {
+	reverse_proxy host.docker.internal:5030
+	encode gzip
+}

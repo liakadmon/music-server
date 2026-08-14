@@ -1,0 +1,113 @@
+services:
+
+  navidrome:
+    container_name: navidrome
+    image: docker.io/deluan/navidrome:latest
+    restart: unless-stopped
+    user: 1000:1000
+    networks:
+      - cloud
+    ports:
+      - "4533:4533"
+    environment:
+      - ND_MUSICFOLDER=/run/media/liana/media/Torrents/Music
+      - ND_CONFIGFILE=/data/navidrome.toml
+      - ND_PLUGINS_ENABLED=true
+      - ND_PLUGINS_AUTORELOAD=true
+      - ND_AGENTS=audiomuseai,apple-music,lastfm,spotify,deezer
+      - ND_DEVARTISTINFOTIMETOLIVE=1s
+      - UMASK=000
+    volumes:
+      - ./navidrome:/data
+      - Music:/run/media/liana/media/Torrents/Music
+      - ./navidrome/backup:/backup
+
+  slskd:
+    container_name: slskd
+    image: ghcr.io/slskd/slskd:latest
+    restart: unless-stopped
+    #user: 1000:1000
+    networks:
+      - cloud
+    ports:
+      - "5030:5030"
+    env_file:
+      - path: "./slskd/slskd.env"
+        required: true
+      - path: "./secrets/slskd.env"
+        required: true
+    environment:
+      - SLSKD_CONFIG=/app/slskd.conf.d/slskd.yml
+      - SLSKD_SHARED_DIR=/music
+      - MUSIC=/music
+      - UMASK=000
+    volumes:
+      - ./slskd/data:/app/data
+      - ./slskd:/app/slskd.conf.d
+      - ./slskd/incomplete:/app/incomplete
+      - Downloads:/app/downloads:rw
+      - Music:/music:ro
+
+  caddy:
+    container_name: caddy
+    image: ghcr.io/serfriz/caddy-cloudflare-ddns:latest
+    restart: unless-stopped
+    env_file:
+      - path: "./secrets/caddy.env"
+        required: true
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "8000:80"
+      - "8443:443"
+      - "8443:443/udp"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:z
+      - ./caddy/site:/srv:z
+      - ./caddy/config:/config:z
+      - caddy_data:/data:z
+
+  cloudflare-ddns:
+    image: favonia/cloudflare-ddns:1
+    # Prefer "1" or "1.x.y" in production.
+    #
+    # - "1" tracks the latest stable release whose major version is 1
+    # - "1.x.y" pins one specific stable version
+    # - "latest" moves to each new stable release and may pick up breaking
+    #   changes in a future major release, so it is not recommended in production
+    # - "edge" tracks the latest unreleased development build
+    restart: unless-stopped
+    # See "Use IPv6 without sharing the host network".
+    # Restart the updater after reboot
+    env_file:
+      - path: "./secrets/cloudflare.env"
+        required: true
+    network_mode: host
+    # Optional. This bypasses network isolation and makes IPv6 easier.
+    user: "1000:1000"
+    # Run the updater with specific user and group IDs (in that order).
+    # You can change the two numbers based on your need.
+    read_only: true
+    # Make the container filesystem read-only (optional but recommended)
+    cap_drop: [all]
+    # Drop all Linux capabilities (optional but recommended)
+    security_opt: [no-new-privileges:true]
+    # Another protection to restrict superuser privileges (optional but recommended)
+    environment:
+      - PROXIED=true
+        # Leaning toward using Cloudflare's proxy for these domains (optional)
+        # Existing DNS records in Cloudflare keep their current proxy statuses
+
+volumes:
+  Downloads:
+    external: true
+  Music:
+    external: true
+  caddy_data:
+    external: true
+  caddy_config:
+
+networks:
+  cloud:
+    driver: bridge
+    external: true

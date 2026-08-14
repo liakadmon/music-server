@@ -1,0 +1,346 @@
+directory: /run/media/liana/media/Torrents/Music/
+library: ~/.config/beets/musiclibrary.db
+plugins: bandcamp musicbrainz albumtypes badfiles bareasc convert deezer describe discogs export embedart fish fetchart fromfilename ftintitle hook lastgenre lyrics mbcollection mbsync missing permissions play playlist random replaygain rewrite scrub subsonicupdate substitute titlecase the types unimported zero #vibenet #filetote
+asciify_paths: yes  #If you're on Windows you may want to enable this. Same if you've got a need to type out paths manually. Your collection might be fine but artists like Röyksopp could throw a wrench in things
+sort_case_insensitive: yes
+threaded: yes
+original_date: yes
+ignore_hidden: yes
+#replace:
+#    '[\\/]': _
+#    '^\.': _
+#    '[\x00-\x1f]': _
+#    '[<>:"\?\*\|]': _
+#    '\.$': _
+#    '\s+$': ''
+#    '^\s+': ''
+#    '^-': _
+#    "'": ""
+
+#include:
+#    - secrets.yaml
+
+clutter:
+    - "Thumbs.db"
+    - ".DS_Store"
+    - "*.log"
+    - "*.cue"
+    - "*.m3u"
+    - "*.m3u8"
+
+import:
+    copy: no
+    move: yes
+    duplicate_action: merge
+    write: yes
+    resume: ask
+    incremental: no
+    incremental_skip_later: yes
+    languages: en
+    log: ~/.config/beets/beets.log
+    quiet: yes
+    quiet_fallback: skip
+    bell: yes
+
+paths:
+    default: %titlecase{%substitute{$album_artist_no_feat}}/%titlecase{%substitute{$album}} $atypes%aunique{}/$track - %titlecase{$title}%sunique{}
+    comp: %titlecase{%substitute{$album_artist_no_feat}}/%titlecase{$album} $atypes%aunique{}/$track - %titlecase{$title}%sunique{}
+    albumtype:soundtrack: Various Artists/%titlecase{$album} $atypes%aunique{} /$track- %titlecase{%substitute{$artist}} - %titlecase{$title}%sunique{}
+    singleton: Non-Album/%titlecase{%substitute{$album_artist_no_feat}}/$track - %titlecase{$title}%sunique{}
+
+match:
+    preferred:
+        media: ['Vinyl$', 'CD','Digital Media|File'] # Priorize vinyl, then CD, then digital media. This should hopefully grab the earliest release of older media.
+        countries: ['US', 'GB|UK', 'XW', 'DE', 'JP'] # Use 2-letter locale, "XW" refers to worldwide releases
+    original_year: yes
+    strong_rec_thresh: 0.90
+    unmatched_tracks: 0.1
+
+musicbrainz:
+    searchlimit: 20
+    data_source_mismatch_penalty: 0.3  # Lower penalty = preferred
+    extra_tags:
+        [
+            year,
+            catalognum,
+            country,
+            label,
+            media
+        ]
+
+albumtypes:
+    types:
+        #- ep: 'EP'
+        #- single: 'Single'
+        #- soundtrack: 'OST'
+        - live: 'Live'
+        #- compilation: 'Anthology'
+        #- remix: 'Remix'
+    ignore_va: compilation0
+    bracket: '[]'
+
+bandcamp:
+    data_source_mismatch_penalty: 0.2
+    include_digital_only_tracks: true
+    search_max: 10
+    art: yes
+    genre:
+        capitalize: no
+        maximum: 5
+        mode: progressive
+
+#bareasc:
+#    prefix: --
+
+convert:
+    auto: yes
+    copy_album_art: yes
+    dest: /home/liana/Music/Converted
+    never_convert_lossy_files: yes
+    write_metadata: false
+    delete_originals: yes
+    no_convert: bitdepth:16, ^path::\.(flac)$
+    max_bitrate: 20
+    quiet: yes
+    format: flac
+    formats:
+        flac:
+            command: sox $source -S -G -b 16 $dest vol 0.98 dither
+            extension: flac
+
+deezer:
+    search_query_ascii: no
+    data_source_mismatch_penalty: 0.8
+    search_limit: 5
+
+discogs:
+    apikey: REDACTED
+    apisecret: REDACTED
+    tokenfile: discogs_token.json
+    user_token: [example]
+    index_tracks: no
+    append_style_genre: no
+    separator: ', '
+    strip_disambiguation: yes
+    featured_string: feat.
+    anv:
+        artist_credit: yes
+        artist: no
+        album_artist: no
+    data_source_mismatch_penalty: 0.5
+    search_limit: 5
+
+embedart:
+    auto: yes
+    ifempty: yes
+    compare_threshold: 0
+    maxwidth: 3000
+    quality: 100
+
+export:
+    json:
+        formatting:
+            ensure_ascii: false
+    jsonlines:
+        formatting:
+            ensure_ascii: false
+
+#extendedmetadata:
+#    query_prefix: 'x'
+#    input_field: 'comments'
+
+fetchart:
+    auto: yes
+    minwidth: 500
+    maxwidth: 1600
+    enforce_ratio: 10px
+    quality: 100
+    high_resolution: yes
+    store_source: yes
+    sources:
+        - cover_art_url
+        - albumart
+        - filesystem
+        - itunes
+        - coverart: release
+
+filetote:
+    move: yes
+    duplicate_action: merge
+    paths:
+        paired_ext:.lrc: $albumpath/$medianame_new
+        paired_ext:.txt: $albumpath/$medianame_new
+        filename:artist.nfo: %substitute{%tcp{$album_artist_no_feat}}/artist.nfo
+        filename:artist.png: %substitute{%tcp{$album_artist_no_feat}}/artist.png
+        filename:artist.jpg: %substitute{%tcp{$album_artist_no_feat}}/artist.jpg
+        filename:backdrop.png: %substitute{%tcp{$album_artist_no_feat}}/backdrop.png
+        filename:backdrop.png: %substitute{%tcp{$album_artist_no_feat}}/backdrop.jpg
+        filename:logo.png: %substitute{%tcp{$album_artist_no_feat}}/logo.png
+        filename:logo.jpg: %substitute{%tcp{$album_artist_no_feat}}/logo.jpg
+        filename:cover.jpg: $albumpath/cover.jpg
+        filename:cover.png: $albumpath/cover.png
+    filenames: artist.nfo album.nfo cover.jpg cover.png background.png background.jpg logo.png logo.jpg ".artoverride.txt" folder.jpg
+    pairing:
+        enabled: true
+        extensions: .lrc .txt
+
+ftintitle:
+    format: (feat. {0})
+
+fuzzy:
+    prefix: ~
+
+hook:
+    hooks:
+        - event: album_imported
+          command: /home/liana/Utilities/Scripts/music-projects/notifier.sh {album.albumartist} {album.album} {album.path}
+        #- event: import_task_choice
+        #  command: /bin/bash -c "/home/liana/Utilities/Scripts/music-projects/skipped.sh \"{task.choice_flag}\" \"{task.paths}\" \"{task.rec}\""
+
+lastfm:
+    user: [UN]
+    api_key: [key]
+
+lastgenre:
+    auto: no
+    canonical: ~/.config/beets/genres/genres-tree.yaml
+    whitelist: ~/.config/beets/genres/genres.txt
+    count: 5
+    fallback: ''
+    separator: '; '
+    force: no
+    min_weight: 10
+    prefer_specific: no
+    source: album
+    title_case: no
+
+lyrics:
+    auto: no
+    dist_thresh: 0.11
+    fallback: null
+    force: no
+    google_API_key: null
+    google_engine_ID: 009217259823014548361:lndtuqkycfu
+    print: no
+    sources: [lrclib]
+    synced: yes
+
+mbcollection:
+    auto: no
+    collection: [mb collection id]
+    remove: no
+
+mpd:
+    host: localhost
+    port: 6600
+    password: seekrit
+
+musicbrainz:
+    user: [un]
+    pass: [pw]
+
+permissions:
+    file: 755
+    dir: 755
+
+play:
+    command: /usr/sbin/mpv
+    use_folders: yes
+    raw: yes
+
+playlist:
+    auto: yes
+    playlist_dir: /run/media/liana/media/Torrents/Music/Playlists/
+
+replaygain:
+    auto: no
+    parallel_on_import: yes
+    backend: ffmpeg
+
+rewrite:
+    albumartist d.a.f: DAF
+    albumartist ^Eno$: Brian Eno
+    albumartist ^The B-.*: The B-52s
+
+scrub:
+    auto: no
+
+subsonic:
+    url: http://localhost:4533
+    username: admin
+    password: ultima
+    auth: password
+
+substitute:
+    .*the stooges.*: The Stooges
+    ^neil young(.*?)(,| &| and).*: Neil Young
+    .*velvet underground.*: The Velvet Underground
+    .*dengue dengue.*: Dengue Dengue Dengue
+    DNGDNGDNG: Dengue Dengue Dengue
+    d.a.f.: DAF
+    ^deutsch amerik.*: DAF
+    TRST: TR/ST
+    TRVST: TR/ST
+    ^r[ö|o]yksopp.*: Röyksopp
+    ^The B-52.*: The B-52s
+
+titlecase:
+    auto: yes
+    fields:
+        - album
+        - title
+        - albumartist
+        - albumartist_credit
+        - albumartist_sort
+        - albumartists
+        - albumartists_credit
+        - albumartists_sort
+        - artist
+        - artist_credit
+        - artist_sort
+        - artists
+        - artists_credit
+        - artists_sort
+    preserve: [As, Of, By, To, "On", Or, An, At, In, If, For, The, And, The, A, bôa, xx, xcx, UNKLE, HEALTH, "of Montreal"]
+    replace: []
+    separators: []
+    force_lowercase: no
+    small_first_last: yes
+    the_artist: yes
+    all_lowercase: yes
+    all_caps: yes
+    after_choice: no
+
+
+unimported:
+    ignore_extensions: jpg png lrc nfo db placeholder txt
+    ignore_subdirectories: NonMusic data temp
+
+#vibenet:
+#    auto: no
+#    force: no
+#    threads: 0
+
+yearfixer:
+    force: no
+
+zero:
+    auto: auto
+    fields: comp composer
+    comments: [EAC, LAME, from.+collection, 'ripped by']
+    genres: techno
+    update_database: true
+
+
+
+
+ui:
+    color: yes
+    colors:
+        text_success: green
+        text_warning: blue
+        text_error: red
+        text_highlight: blue
+        text_highlight_minor: lightgray
+        action_default: darkblue
+        action: purple
